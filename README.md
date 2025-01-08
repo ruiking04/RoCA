@@ -2,17 +2,13 @@
 This repository provides the implementation of the _COCA+: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data_ method, called _COCA+_ below. 
 
 ## Abstract
-> The accumulation of time-series signals and the absence of labels make time-series Anomaly Detection (AD) a self-supervised 
-> task of deep learning. Most methods based on normality assumptions face the following two challenges: 
-> (1) a single assumption could hardly characterize the whole normality or lead to some deviation, 
-> e.g. Contrastive Learning (CL) methods distance negative pairs, many of which consist of both normal samples, thus reducing the AD performance. 
-> (2) their basic assumption is that the training data is uncontaminated (free of anomalies), which is unrealistic in practice. 
-> When the proportion of contaminated data increases, the performance will be affected to varying degrees. 
-> This paper proposes a novel and robust approach based on multiple normality assumptions for time series anomaly detection with contaminated data. 
-> We fuse the assumptions of one-class classification and contrastive learning in a single learning process to characterize a more complete so-called normality.
-> Meanwhile, we introduce the idea of outlier exposure in the latent space, which helps exclude the influence of abnormal samples 
-> while utilizing the contained anomaly knowledge. Boundaries become clearer by pushing potential anomalies away from clusters of normal samples. 
-> Extensive experiments on four real-world time-series datasets show the superior performance of the proposed method achieves state-of-the-art.
+> The accumulation of time-series signals and the absence of labels make time-series Anomaly Detection (AD) a self-supervised
+> task of deep learning. Most methods based on normality assumptions face the following two challenges:
+> (1) a single assumption could hardly characterize the whole normality or lead to some deviation, e.g. Contrastive Learning (CL) methods distance negative pairs, many of which consist of both normal samples, thus reducing the AD performance.
+> (2) their basic assumption is that the training data is uncontaminated (free of anomalies), which is unrealistic in practice. When the proportion of contaminated data increases, the performance will be affected to varying degrees.
+> This paper proposes a novel approach for time series anomaly detection based on multiple normality assumptions.
+> We fuse the assumptions of one-class classification, contrastive learning, and autoencoder in a single learning process to characterize a more complete so-called normality.
+> On the other hand, we introduce the idea of outlier exposure in the latent space, which helps exclude the influence of abnormal samples and utilize the contained anomaly knowledge.
 
 
 
