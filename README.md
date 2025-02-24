@@ -1,5 +1,5 @@
-# COCA+: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data
-This repository provides the implementation of the _COCA+: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data_ method, called _COCA+_ below. 
+# RoCA: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data
+This repository provides the implementation of the _RoCA: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data_ method, called _RoCA_ below. 
 
 ## Abstract
 > The accumulation of time-series signals and the absence of labels make time-series Anomaly Detection (AD) a self-supervised
@@ -7,7 +7,7 @@ This repository provides the implementation of the _COCA+: Robust Contrastive On
 > (1) a single assumption could hardly characterize the whole normality or lead to some deviation, e.g. Contrastive Learning (CL) methods distance negative pairs, many of which consist of both normal samples, thus reducing the AD performance.
 > (2) their basic assumption is that the training data is uncontaminated (free of anomalies), which is unrealistic in practice. When the proportion of contaminated data increases, the performance will be affected to varying degrees.
 > This paper proposes a novel approach for time series anomaly detection based on multiple normality assumptions.
-> We fuse the assumptions of one-class classification, contrastive learning, and autoencoder in a single learning process to characterize a more complete so-called normality.
+> We fuse the assumptions of one-class classification, contrastive learning, and autoencoder in a single learning process to characterize a complete so-called normality.
 > On the other hand, we introduce the idea of outlier exposure in the latent space, which helps exclude the influence of abnormal samples and utilize the contained anomaly knowledge.
 
 
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 
 ## Dataset
-We acknowledge the contributors of the dataset, including AIOps, UCR, SWaT, and WADI.
+We acknowledge the dataset's contributors, including AIOps, UCR, SWaT, and WADI.
 This repository already includes Merlion's data loading package `ts_datasets`.
 
 ### AIOps (KPI, IOpsCompetition) and UCR. 
@@ -58,9 +58,9 @@ Source code of CutAddPaste model.
 ### `results`
 Directory where the experiment result is saved.
 
-## COCA+ Usage
+## RoCA Usage
 ```
-# COCA+ Method (dataset_name: IOpsCompetition, UCR, SWaT, WADI)
+# RoCA Method (dataset_name: IOpsCompetition, UCR, SWaT, WADI)
 python coca+.py --selected_dataset <dataset_name> --device cuda --seed 2
 ```
 
