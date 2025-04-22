@@ -5,8 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from merlion.utils import TimeSeries
 from merlion.transform.normalize import MeanVarNormalize
 
-# root_path = "../data/"
-root_path = "../../tsad/data/"
+root_path = "../data/"
 def norm(train, test):
     scaler = StandardScaler()
     # scaler.fit(np.concatenate((train, test), axis=0))
