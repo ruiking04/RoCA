@@ -5,6 +5,7 @@ import pandas as pd
 from merlion.evaluate.anomaly import accumulate_tsad_score, ScoreType
 from merlion.utils import TimeSeries
 import time
+from joblib import Parallel, delayed
 
 
 # Anomalies detection
@@ -18,6 +19,7 @@ def ad_predict(target, scores, mode, nu):
     elif mode == 'fix':
         affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict = ad_fix(target, scores, if_aff, nu)
     else:
+        # affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict = ad_floating_lazy(target, scores, if_aff)
         affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict = ad_floating(target, scores, if_aff)
         # affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict = ad_floating_origin(target, scores, if_aff,1000)
 
@@ -96,50 +98,55 @@ def ad_floating(target, scores, if_aff):
 
     normal_scores = z_score(scores)
     events_gt = convert_vector_to_events(target)
-    target_ts = TimeSeries.from_pd(pd.DataFrame(target))
+    target_ts = create_time_series(target, chunk_size=100000)
+    # target_ts = TimeSeries.from_pd(pd.DataFrame(target))
 
     nu_list = np.arange(-3, 3, 0.01)
-    pa_f1_list, pw_f1_list, rpa_f1_list, affiliation_f1_list = [], [], [], []
-    score_list, affiliation_list = [], []
-    for detect_nu in nu_list:
-        # threshold = np.percentile(scores, 100 - detect_nu)
-        # Detect anomalies based on the current nu value
+    pa_f1_list, pw_f1_list, rpa_f1_list = [], [], []
+    affiliation_f1_list, affiliation_list = [], []
+    score_list = []
+
+    def _calc_f1_for_nu(detect_nu):
         predict = np.int64(normal_scores > detect_nu)
         if if_aff != 0:
-            # Calculate affiliation F1 score
             events_pred = convert_vector_to_events(predict)
             Trange = (0, len(predict))
             dic = pr_from_events(events_pred, events_gt, Trange)
             affiliation_f1 = 2 * (dic["precision"] * dic["recall"]) / (dic["precision"] + dic["recall"])
-            affiliation_f1_list.append(affiliation_f1)
         else:
-            # If no affiliation, set affiliation F1 score to 0
             dic = {"precision": 0, "recall": 0}
-            affiliation_f1_list.append(0)
-        affiliation_list.append(dic)
-
-        # Calculate F1 scores
-        predict_ts = TimeSeries.from_pd(pd.DataFrame(predict))
+            affiliation_f1 = 0
+        predict_ts = create_time_series(predict, chunk_size=100000)
         score = accumulate_tsad_score(ground_truth=target_ts, predict=predict_ts)
         rpa_f1 = score.f1(ScoreType.RevisedPointAdjusted)
         pa_f1 = score.f1(ScoreType.PointAdjusted)
         pw_f1 = score.f1(ScoreType.Pointwise)
+        return dic, affiliation_f1, rpa_f1, pa_f1, pw_f1, score
+
+    # results = Parallel(n_jobs=-1)(
+    results = Parallel(n_jobs=4)(
+        delayed(_calc_f1_for_nu)(detect_nu) for detect_nu in nu_list
+    )
+
+    for item in results:
+        dic, aff_f1, rpa_f1, pa_f1, pw_f1, sc = item
+        affiliation_f1_list.append(aff_f1)
+        affiliation_list.append(dic)
         rpa_f1_list.append(rpa_f1)
         pa_f1_list.append(pa_f1)
         pw_f1_list.append(pw_f1)
-        score_list.append(score)
+        score_list.append(sc)
 
-    # Find the best affiliation threshold and corresponding F1 scores
     affiliation_f1_list = np.nan_to_num(affiliation_f1_list)
     affiliation_max_index = np.nanargmax(affiliation_f1_list, axis=0)
     affiliation_max = affiliation_list[affiliation_max_index]
     affiliation_nu_max = nu_list[affiliation_max_index]
-    print("Best affiliation threshold: {:.2f}".format(affiliation_nu_max))
+    print("Best affiliation threshold: {:.3f}".format(affiliation_nu_max))
 
     rpa_max_index = np.nanargmax(rpa_f1_list, axis=0)
     rpa_score_max = score_list[rpa_max_index]
     rpa_nu_max = nu_list[rpa_max_index]
-    print('Best RPA threshold: {:.2f}'.format(rpa_nu_max))
+    print('Best RPA threshold: {:.3f}'.format(rpa_nu_max))
 
     pa_max_index = np.nanargmax(pa_f1_list, axis=0)
     pa_score_max = score_list[pa_max_index]
@@ -148,133 +155,11 @@ def ad_floating(target, scores, if_aff):
 
     pw_max_index = np.nanargmax(pw_f1_list, axis=0)
     pw_score_max = score_list[pw_max_index]
-    # pw_nu_max = nu_list[pw_max_index]
-    # print('Best PW threshold:', pw_nu_max)
 
-    # threshold = np.percentile(scores, 100 - pa_nu_max)
     predict = np.int64(normal_scores > rpa_nu_max)
-
     end_time = time.time()
-    execution_time = end_time - start_time
-    print("Execution time: {:.5f} seconds".format(execution_time))
+    print("Execution time: {:.5f} seconds".format(end_time - start_time))
 
-    return affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict
-
-
-# Anomalies are detected based on anomaly scores and floating thresholds.
-def ad_floating_origin(target, scores, if_aff, upper_limit):
-    events_gt = convert_vector_to_events(target)
-    target_ts = TimeSeries.from_pd(pd.DataFrame(target))
-
-    resolution = int(upper_limit/100)
-    nu_list = np.arange(1, upper_limit) / resolution
-    pa_f1_list, pw_f1_list, rpa_f1_list, affiliation_f1_list = [], [], [], []
-    score_list, affiliation_list = [], []
-    for detect_nu in nu_list:
-        threshold = np.percentile(scores, 100 - detect_nu)
-        predict = np.int64(scores > threshold)
-        if if_aff != 0:
-            events_pred = convert_vector_to_events(predict)
-            Trange = (0, len(predict))
-            dic = pr_from_events(events_pred, events_gt, Trange)
-            affiliation_f1 = 2 * (dic["precision"] * dic["recall"]) / (dic["precision"] + dic["recall"])
-            affiliation_f1_list.append(affiliation_f1)
-        else:
-            dic = dict()
-            dic["precision"] = 0
-            dic["recall"] = 0
-            affiliation_f1_list.append(0)
-        affiliation_list.append(dic)
-        predict_ts = TimeSeries.from_pd(pd.DataFrame(predict))
-        score = accumulate_tsad_score(ground_truth=target_ts, predict=predict_ts)
-        rpa_f1 = score.f1(ScoreType.RevisedPointAdjusted)
-        pa_f1 = score.f1(ScoreType.PointAdjusted)
-        pw_f1 = score.f1(ScoreType.Pointwise)
-        rpa_f1_list.append(rpa_f1)
-        pa_f1_list.append(pa_f1)
-        pw_f1_list.append(pw_f1)
-        score_list.append(score)
-    affiliation_f1_list = np.nan_to_num(affiliation_f1_list)
-    affiliation_max_index = np.nanargmax(affiliation_f1_list, axis=0)
-    affiliation_max = affiliation_list[affiliation_max_index]
-    affiliation_nu_max = nu_list[affiliation_max_index]
-    print("Best affiliation quantile:", affiliation_nu_max)
-
-    rpa_max_index = np.nanargmax(rpa_f1_list, axis=0)
-    rpa_score_max = score_list[rpa_max_index]
-    rpa_nu_max = nu_list[rpa_max_index]
-    print('Best RPA quantile:', rpa_nu_max)
-
-    pa_max_index = np.nanargmax(pa_f1_list, axis=0)
-    pa_score_max = score_list[pa_max_index]
-    pa_nu_max = nu_list[pa_max_index]
-    print('Best PA quantile:', pa_nu_max)
-
-    pw_max_index = np.nanargmax(pw_f1_list, axis=0)
-    pw_score_max = score_list[pw_max_index]
-    pw_nu_max = nu_list[pw_max_index]
-    print('Best PW quantile:', pw_nu_max)
-
-    threshold = np.percentile(scores, 100 - pa_nu_max)
-    predict = np.int64(scores > threshold)
-    return affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict
-
-
-def ad_floating_origin1(target, scores, if_aff, upper_limit):
-    events_gt = convert_vector_to_events(target)
-    target_ts = TimeSeries.from_pd(pd.DataFrame(target))
-
-    resolution = int(upper_limit/100)
-    nu_list = np.arange(1, upper_limit) / resolution
-    pa_f1_list, pw_f1_list, rpa_f1_list, affiliation_f1_list = [], [], [], []
-    score_list, affiliation_list = [], []
-    for detect_nu in nu_list:
-        threshold = np.percentile(scores, 100 - detect_nu)
-        predict = np.int64(scores > threshold)
-        if if_aff != 0:
-            events_pred = convert_vector_to_events(predict)
-            Trange = (0, len(predict))
-            dic = pr_from_events(events_pred, events_gt, Trange)
-            affiliation_f1 = 2 * (dic["precision"] * dic["recall"]) / (dic["precision"] + dic["recall"])
-            affiliation_f1_list.append(affiliation_f1)
-        else:
-            dic = dict()
-            dic["precision"] = 0
-            dic["recall"] = 0
-            affiliation_f1_list.append(0)
-        affiliation_list.append(dic)
-        predict_ts = TimeSeries.from_pd(pd.DataFrame(predict))
-        score = accumulate_tsad_score(ground_truth=target_ts, predict=predict_ts)
-        rpa_f1 = score.f1(ScoreType.RevisedPointAdjusted)
-        pa_f1 = score.f1(ScoreType.PointAdjusted)
-        pw_f1 = score.f1(ScoreType.Pointwise)
-        rpa_f1_list.append(rpa_f1)
-        pa_f1_list.append(pa_f1)
-        pw_f1_list.append(pw_f1)
-        score_list.append(score)
-    affiliation_f1_list = np.nan_to_num(affiliation_f1_list)
-    affiliation_max_index = np.nanargmax(affiliation_f1_list, axis=0)
-    affiliation_max = affiliation_list[affiliation_max_index]
-    affiliation_nu_max = nu_list[affiliation_max_index]
-    print("Best affiliation quantile:", affiliation_nu_max)
-
-    rpa_max_index = np.nanargmax(rpa_f1_list, axis=0)
-    rpa_score_max = score_list[rpa_max_index]
-    rpa_nu_max = nu_list[rpa_max_index]
-    print('Best RPA quantile:', rpa_nu_max)
-
-    pa_max_index = np.nanargmax(pa_f1_list, axis=0)
-    pa_score_max = score_list[pa_max_index]
-    pa_nu_max = nu_list[pa_max_index]
-    print('Best PA quantile:', pa_nu_max)
-
-    pw_max_index = np.nanargmax(pw_f1_list, axis=0)
-    pw_score_max = score_list[pw_max_index]
-    pw_nu_max = nu_list[pw_max_index]
-    print('Best PW quantile:', pw_nu_max)
-
-    threshold = np.percentile(scores, 100 - pa_nu_max)
-    predict = np.int64(scores > threshold)
     return affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict
 
 
@@ -286,4 +171,124 @@ def z_score(scores):
         scores = (scores - mean)/std
     return scores
 
+def create_time_series(target, chunk_size=100000):
+    """
+    将 target 分块处理并逐步合并为一个 TimeSeries 对象。
+    
+    :param target: 输入的时间序列数据（NumPy 数组或列表）。
+    :param chunk_size: 每次处理的块大小，默认为 100,000。
+    :return: 合并后的 TimeSeries 对象。
+    """
+    combined_ts = None  # 初始化为空
+    total_length = len(target)
 
+    for i in range(0, total_length, chunk_size):
+        # 分块处理 target
+        chunk = target[i:i + chunk_size]
+        chunk_df = pd.DataFrame(chunk, columns=["value"])
+        chunk_df["timestamp"] = pd.date_range(start=i, periods=len(chunk), freq="1T")  # 假设每分钟一个点
+        chunk_ts = TimeSeries.from_pd(chunk_df.set_index("timestamp"))
+
+        # 合并当前块到总的 TimeSeries
+        if combined_ts is None:
+            combined_ts = chunk_ts
+        else:
+            combined_ts += chunk_ts  # 合并 TimeSeries
+
+    return combined_ts
+
+def create_time_series_lazy(target, chunk_size=100000):
+    """
+    延迟加载 target 数据，仅在需要时生成 TimeSeries 对象。
+    
+    :param target: 输入的时间序列数据（NumPy 数组或列表）。
+    :param chunk_size: 每次处理的块大小，默认为 100,000。
+    :return: 一个生成器，逐块返回 TimeSeries 对象。
+    """
+    total_length = len(target)
+
+    for i in range(0, total_length, chunk_size):
+        # 分块处理 target
+        chunk = target[i:i + chunk_size]
+        chunk_df = pd.DataFrame(chunk, columns=["value"])
+        chunk_df["timestamp"] = pd.date_range(start=i, periods=len(chunk), freq="1T")  # 假设每分钟一个点
+        yield TimeSeries.from_pd(chunk_df.set_index("timestamp"))
+
+def ad_floating_lazy(target, scores, if_aff):
+    start_time = time.time()
+
+    normal_scores = z_score(scores)
+    events_gt = convert_vector_to_events(target)
+
+    # 使用生成器逐块生成 target_ts
+    target_ts_generator = create_time_series_lazy(target, chunk_size=100000)
+
+    nu_list = np.arange(-3, 3, 0.1)  # 减少范围或增大步长
+    pa_f1_list, pw_f1_list, rpa_f1_list = [], [], []
+    affiliation_f1_list, affiliation_list = [], []
+    score_list = []
+
+    def _calc_f1_for_nu(detect_nu):
+        predict = np.int64(normal_scores > detect_nu)
+        if if_aff != 0:
+            events_pred = convert_vector_to_events(predict)
+            Trange = (0, len(predict))
+            dic = pr_from_events(events_pred, events_gt, Trange)
+            affiliation_f1 = 2 * (dic["precision"] * dic["recall"]) / (dic["precision"] + dic["recall"])
+        else:
+            dic = {"precision": 0, "recall": 0}
+            affiliation_f1 = 0
+
+        # 使用生成器逐块生成 predict_ts
+        predict_ts_generator = create_time_series_lazy(predict, chunk_size=100000)
+
+        # 累积评分
+        score = None
+        for target_ts_chunk, predict_ts_chunk in zip(target_ts_generator, predict_ts_generator):
+            if score is None:
+                score = accumulate_tsad_score(ground_truth=target_ts_chunk, predict=predict_ts_chunk)
+            else:
+                score += accumulate_tsad_score(ground_truth=target_ts_chunk, predict=predict_ts_chunk)
+
+        rpa_f1 = score.f1(ScoreType.RevisedPointAdjusted)
+        pa_f1 = score.f1(ScoreType.PointAdjusted)
+        pw_f1 = score.f1(ScoreType.Pointwise)
+        return dic, affiliation_f1, rpa_f1, pa_f1, pw_f1, score
+
+    results = Parallel(n_jobs=4)(
+        delayed(_calc_f1_for_nu)(detect_nu) for detect_nu in nu_list
+    )
+
+    for item in results:
+        dic, aff_f1, rpa_f1, pa_f1, pw_f1, sc = item
+        affiliation_f1_list.append(aff_f1)
+        affiliation_list.append(dic)
+        rpa_f1_list.append(rpa_f1)
+        pa_f1_list.append(pa_f1)
+        pw_f1_list.append(pw_f1)
+        score_list.append(sc)
+
+    affiliation_f1_list = np.nan_to_num(affiliation_f1_list)
+    affiliation_max_index = np.nanargmax(affiliation_f1_list, axis=0)
+    affiliation_max = affiliation_list[affiliation_max_index]
+    affiliation_nu_max = nu_list[affiliation_max_index]
+    print("Best affiliation threshold: {:.3f}".format(affiliation_nu_max))
+
+    rpa_max_index = np.nanargmax(rpa_f1_list, axis=0)
+    rpa_score_max = score_list[rpa_max_index]
+    rpa_nu_max = nu_list[rpa_max_index]
+    print('Best RPA threshold: {:.3f}'.format(rpa_nu_max))
+
+    pa_max_index = np.nanargmax(pa_f1_list, axis=0)
+    pa_score_max = score_list[pa_max_index]
+    pa_nu_max = nu_list[pa_max_index]
+    print('Best PA threshold:', pa_nu_max)
+
+    pw_max_index = np.nanargmax(pw_f1_list, axis=0)
+    pw_score_max = score_list[pw_max_index]
+
+    predict = np.int64(normal_scores > rpa_nu_max)
+    end_time = time.time()
+    print("Execution time: {:.5f} seconds".format(end_time - start_time))
+
+    return affiliation_max, rpa_score_max, pa_score_max, pw_score_max, predict

@@ -5,7 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from merlion.utils import TimeSeries
 from merlion.transform.normalize import MeanVarNormalize
 
-
+# root_path = "../data/"
+root_path = "../../tsad/data/"
 def norm(train, test):
     scaler = StandardScaler()
     # scaler.fit(np.concatenate((train, test), axis=0))
@@ -17,7 +18,7 @@ def norm(train, test):
 def swat_preprocessing():
     # the following code is adapted from the source code in [Zhihan Li et al. KDD21]
     # preprocess for SWaT. SWaT.A2_Dec2015, version 0
-    dataset_folder = os.path.join('../data/', 'swat')
+    dataset_folder = os.path.join(root_path, 'swat')
 
     test_df = pd.read_excel(os.path.join(dataset_folder, 'SWaT_Dataset_Attack_v0.xlsx'), header=1)
 
@@ -46,7 +47,7 @@ def swat_preprocessing():
 
 def wadi_preprocessing():
     # preprocess for WADI. WADI.A2_19Nov2019
-    dataset_folder = os.path.join('../data/', 'wadi')
+    dataset_folder = os.path.join(root_path, 'wadi')
 
     train_df = pd.read_csv(os.path.join(dataset_folder, 'WADI_14days_new.csv'), index_col=0, header=0)
     test_df = pd.read_csv(os.path.join(dataset_folder, 'WADI_attackdataLABLE.csv'), index_col=0, header=1)
@@ -94,7 +95,7 @@ def swat():
 
 
 def wadi():
-    dataset_folder = os.path.join('data/', 'wadi')
+    dataset_folder = os.path.join(root_path, 'wadi')
     train_df = pd.read_csv(os.path.join(dataset_folder, 'WADI_train.csv'))
     train_df = np.array(train_df.set_index('Row'))
     train_data = train_df[:, :127]
@@ -112,7 +113,7 @@ def wadi():
 
 
 def wadi_visual():
-    dataset_folder = os.path.join('data/', 'wadi')
+    dataset_folder = os.path.join(root_path, 'wadi')
     # dataset_folder = os.path.join('../data/', 'wadi')
     train_df = pd.read_csv(os.path.join(dataset_folder, 'WADI_train.csv'))
     train_df = np.array(train_df.set_index('Row'))

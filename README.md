@@ -46,7 +46,6 @@ we used their newer versions: `SWaT.SWaT.A2_Dec2015, version 0` and `WADI.A2_19N
 3. Download and unzip the data in `data/swat` and `data/wadi` respectively. Then run the 
 `swat_preprocessing()` and `wadi_preprocessing()` functions in `dataloader/data_preprocessing.py` for preprocessing.
 
-
 ## Repository Structure
 
 ### `conf`
@@ -61,7 +60,7 @@ Directory where the experiment result is saved.
 ## RoCA Usage
 ```
 # RoCA Method (dataset_name: IOpsCompetition, UCR, SWaT, WADI)
-python coca+.py --selected_dataset <dataset_name> --device cuda --seed 2
+python roca.py --selected_dataset <dataset_name> --device cuda --seed 2
 ```
 
 ## Baselines
