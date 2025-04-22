@@ -52,7 +52,10 @@ we used their newer versions: `SWaT.SWaT.A2_Dec2015, version 0` and `WADI.A2_19N
 This directory contains experiment parameters for all models on AIOps (as `IOpsCompetition` in the code), UCR, SWaT, and WADI datasets.
 
 ### `models`
-Source code of CutAddPaste model.
+Source code of the RoCA model.
+
+### `data`
+Processed datasets. Such as data/UCR, data/WADI.
 
 ### `results`
 Directory where the experiment result is saved.
