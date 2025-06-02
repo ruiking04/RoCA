@@ -62,6 +62,7 @@ SEED = args.seed
 print(f'Dataset: {data_type}')
 print(f'Method:  {method}')
 print(f'Random Seed:  {SEED}')
+str_conf = print_object(configs)
 
 # Load datasets
 if selected_dataset == 'SWaT':
@@ -218,7 +219,7 @@ print("affiliation metrics:\n",
       "seed:", SEED, "\n"
       "config setup:\n"
       )
-str_conf = print_object(configs)
+print_object(configs)
 if hasattr(configs, 'augmentation'):
     str_aug = print_object(configs.augmentation)
     str_conf += '\n' + str_aug

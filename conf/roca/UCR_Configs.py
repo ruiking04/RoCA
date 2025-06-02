@@ -19,7 +19,7 @@ class Config(object):
         self.num_epoch = 100
         self.change_center_epoch = 10
         self.center_eps = 0.1
-        self.omega = 0.1
+        self.omega = 0.01
 
         # optimizer parameters
         self.beta1 = 0.9
@@ -33,14 +33,9 @@ class Config(object):
 
         # training strategy
         self.warmup = 10
-        # Specify train type ("original", "soft_boundary", "loe_ts")
-        self.train_method = 'loe_ts'
         self.nu = 0.001
         # loe_ts parameters
         self.mu = 0.5
-        # soft_boundary parameters
-        self.phi = 0.001
-        self.freeze_length_epoch = 10
 
         # Anomaly Detection parameters
         # Anomaly quantile of fixed threshold

@@ -94,7 +94,7 @@ def swat():
 
 
 def wadi():
-    dataset_folder = os.path.join(root_path, 'wadi')
+    dataset_folder = os.path.join('data/', 'wadi')
     train_df = pd.read_csv(os.path.join(dataset_folder, 'WADI_train.csv'))
     train_df = np.array(train_df.set_index('Row'))
     train_data = train_df[:, :127]

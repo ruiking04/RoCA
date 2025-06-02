@@ -2,18 +2,23 @@
 This repository provides the implementation of the _RoCA: Robust Contrastive One-class Time Series Anomaly Detection with Contaminated Data_ method, called _RoCA_ below. 
 
 ## Abstract
-> The accumulation of time-series signals and the absence of labels make time-series Anomaly Detection (AD) a self-supervised
-> task of deep learning. Most methods based on normality assumptions face the following two challenges:
-> (1) a single assumption could hardly characterize the whole normality or lead to some deviation, e.g. Contrastive Learning (CL) methods distance negative pairs, many of which consist of both normal samples, thus reducing the AD performance.
-> (2) their basic assumption is that the training data is uncontaminated (free of anomalies), which is unrealistic in practice. When the proportion of contaminated data increases, the performance will be affected to varying degrees.
-> This paper proposes a novel approach for time series anomaly detection based on multiple normality assumptions.
-> We fuse the assumptions of one-class classification, contrastive learning, and autoencoder in a single learning process to characterize a complete so-called normality.
-> On the other hand, we introduce the idea of outlier exposure in the latent space, which helps exclude the influence of abnormal samples and utilize the contained anomaly knowledge.
+> The increasing volume of time-series signals and the scarcity of labels make time-series anomaly detection a natural 
+> fit for self-supervised deep learning. However, existing normality-based approaches face two key limitations: 
+> (1) relying on a single assumption often fails to capture the whole normal patterns, leading to biased representations; 
+> and (2) they typically presume clean training data, which is unrealistic in practice and undermines model robustness. 
+> In this paper, we propose RoCA, a unified and robust anomaly detection framework that simultaneously addresses assumption incompleteness and data contamination. 
+> The key insight is that normal samples tend to satisfy multiple normality assumptions, whereas anomalous or contaminated samples should violate at least one. 
+> RoCA employs a composite loss function consisting of a multi-normality alignment term, a dynamic abnormality-aware term, 
+> and a variance regularization term to maintain training stability. This design enables RoCA to dynamically discover 
+> and isolate latent anomalies during training, without requiring clean supervision.
+> Extensive experiments on both univariate and multivariate time-series benchmarks demonstrate that RoCA consistently 
+> outperforms state-of-the-art methods, achieving up to 7.3% improvement under real-world contamination. 
+> Our theoretical analysis further reveals the intrinsic synergy between contrastive learning and one-class classification under the RoCA framework.
 
 
 
 ## Citation
-Link to our paper [here]().
+Link to our paper xxx.
 If you use this code for your research, please cite our paper:
 
 ```
