@@ -229,12 +229,15 @@ def train(feature1, feature_dec1, center, epoch, config, device):
     if epoch < config.warmup:
         loss_oc = torch.mean(loss_n)
     else:
-        _, idx_n = torch.topk(score, int(score.shape[0] * (1 - config.nu)), largest=False,
-                              sorted=False)
-        _, idx_a = torch.topk(score, int(score.shape[0] * config.nu), largest=True,
-                              sorted=False)
-        loss_oc = torch.cat([loss_n[idx_n], config.mu * loss_a[idx_a]], 0)
-        loss_oc = loss_oc.mean()
+        if config.train_method == 'contaminated':
+            _, idx_n = torch.topk(score, int(score.shape[0] * (1 - config.nu)), largest=False,
+                                  sorted=False)
+            _, idx_a = torch.topk(score, int(score.shape[0] * config.nu), largest=True,
+                                  sorted=False)
+            loss_oc = torch.cat([loss_n[idx_n], config.mu * loss_a[idx_a]], 0)
+            loss_oc = loss_oc.mean()
+        else:
+            loss_oc = torch.mean(loss_n)
 
     return loss_oc, loss_sigam, loss_n, loss_a
 

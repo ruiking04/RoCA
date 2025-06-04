@@ -33,8 +33,9 @@ class Config(object):
 
         # training strategy
         self.warmup = 10
+        # Specify train type ("contaminated", "pure")
+        self.train_method = 'pure'
         self.nu = 0.001
-        # loe_ts parameters
         self.mu = 0.5
 
         # Anomaly Detection parameters
