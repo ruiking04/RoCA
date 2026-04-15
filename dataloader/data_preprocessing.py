@@ -8,7 +8,6 @@ from merlion.transform.normalize import MeanVarNormalize
 root_path = "../data/"
 def norm(train, test):
     scaler = StandardScaler()
-    # scaler.fit(np.concatenate((train, test), axis=0))
     scaler.fit(train)
     train_data = scaler.transform(train)
     test_data = scaler.transform(test)
@@ -81,10 +80,6 @@ def swat():
     test_df = np.array(test_df.set_index(' Timestamp'))
     test_data = test_df[:, :51]
 
-    # scaler = StandardScaler()
-    # scaler.fit(np.concatenate((train_data, test_data), axis=0))
-    # train_data = scaler.transform(train_data)
-    # test_data = scaler.transform(test_data)
     train_data, test_data = norm(train_data, test_data)
 
     train_labels = train_df[:, 51]
@@ -136,7 +131,7 @@ def other_datasets(time_series, meta_data):
     train_labels = TimeSeries.from_pd(meta_data.anomaly[meta_data.trainval])
     test_labels = TimeSeries.from_pd(meta_data.anomaly[~meta_data.trainval])
     mvn = MeanVarNormalize()
-    mvn.train(train_time_series_ts + test_time_series_ts)
+    mvn.train(train_time_series_ts)
     # salesforce-merlion==1.1.1
     bias, scale = mvn.bias, mvn.scale
 

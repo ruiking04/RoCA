@@ -72,9 +72,8 @@ def data_generator1(train_data, test_data, train_labels, test_labels, seed, conf
             test_y_window[i] = 0
     train_y = train_y_window
     test_y = test_y_window
-    _, val_x, _, val_y = train_test_split(test_x, test_y_window, test_size=0.2, shuffle=True, random_state=seed,
+    test_x, val_x, test_y, val_y = train_test_split(test_x, test_y_window, test_size=0.2, shuffle=True, random_state=seed,
                                           stratify=test_y_window)
-    # train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.2, shuffle=False)
     train_x = train_x.transpose((0, 2, 1))
     val_x = val_x.transpose((0, 2, 1))
     test_x = test_x.transpose((0, 2, 1))

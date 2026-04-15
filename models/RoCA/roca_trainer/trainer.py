@@ -42,19 +42,7 @@ def Trainer(model, model_optimizer, train_dl, val_dl, test_dl, device, config, i
                          )
         all_epoch_train_loss.append(train_loss.item())
         all_epoch_test_loss.append(val_loss.item())
-        if config.dataset == 'UCR':
-            # val_affiliation, val_score, _, _, _ = ad_predict(val_target, val_score_origin, config.threshold_determine,
-            #                                            config.detect_nu)
-            test_affiliation, test_score, _, _, predict = ad_predict(test_target, test_score_origin, config.threshold_determine,
-                                                       config.detect_nu)
-            score_reasonable = tsad_reasonable(test_target, predict, config.time_step)
-            indicator = test_score.f1(ScoreType.RevisedPointAdjusted)
-            early_stopping(score_reasonable, test_affiliation, test_score, indicator, val_score_origin,
-                           test_score_origin, model)
-            if early_stopping.early_stop:
-                print("Early stopping")
-                break
-        elif config.dataset == 'SWaT' or config.dataset == 'WADI':
+        if config.dataset == 'SWaT' or config.dataset == 'WADI':
             val_affiliation, val_score, _, _, predict = ad_predict(val_target, val_score_origin, config.threshold_determine,
                                                        config.detect_nu)
             score_reasonable = tsad_reasonable(test_target, predict, config.time_step)
