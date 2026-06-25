@@ -18,11 +18,20 @@ This repository provides the implementation of the _RoCA: Robust Contrastive One
 
 
 ## Citation
-Link to our paper xxx.
+Link to our paper [here](https://ieeexplore.ieee.org/document/11575088).
 If you use this code for your research, please cite our paper:
 
 ```
-We will add citation information later.
+@ARTICLE{11575088,
+  author={Mou, Xudong and Wang, Rui and Li, Bo and Wo, Tianyu and Sun, Jie and Wang, Hui and Liu, Xudong},
+  journal={IEEE Transactions on Neural Networks and Learning Systems}, 
+  title={RoCA: Robust Contrastive One-Class Time Series Anomaly Detection With Contaminated Data}, 
+  year={2026},
+  volume={},
+  number={},
+  pages={1-15},
+  keywords={Timing;Modeling;Training;Learning (artificial intelligence);Contamination;Labeling;Anomaly detection;Optimization;Measurement;Visualization;Contaminated data;contrastive learning (CL);multiple normality assumptions;one-class classification (OC);time series anomaly detection (TSAD)},
+  doi={10.1109/TNNLS.2026.3702237}}
 ```
 
 ## Installation
@@ -58,6 +67,13 @@ This directory contains experiment parameters for all models on AIOps (as `IOpsC
 
 ### `models`
 Source code of the RoCA model.
+
+It should be noted that the UCR dataset is highly diverse, 
+with 250 subsets covering various fields such as healthcare, industry, astronomy, and others. 
+Each subset has a different data distribution, resulting in varying hyperparameters, 
+especially the number of epochs, which requires tuning for each subset individually. 
+Furthermore, the test set contains only one anomalous segment, making it difficult to split a validation set from it.
+In this paper, we keep all other hyperparameters fixed and search for the optimal number of epochs within the range of epochs.
 
 ### `data`
 Processed datasets. Such as data/UCR, data/WADI.
